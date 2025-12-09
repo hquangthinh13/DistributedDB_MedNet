@@ -53,3 +53,29 @@ SELECT * FROM [PATIENT.2]
 SELECT * FROM [SPECIMEN.1.2] 
 -- DELETE USING PROCEDURE 
 EXEC dbo.usp_DeleteSpecimen_B2 @specimen_id = 17;
+
+---TEST TRIGGER---
+--1. Test TRIGGER 1---
+UPDATE [SPECIMEN.1.2] 
+SET status = 'Collected' 
+WHERE specimen_id = 1;
+---2. Test TRIGGER 2---
+DECLARE @EncID INT;
+-- Create new encounter to test---
+EXEC dbo.usp_InsertNewEncounter_B2 
+    @patient_id = 5, 
+    @encounter_date = '2025-12-09 15:35:00', 
+    @encounter_type = 'LabTest', 
+    @notes = 'Test Trigger Chan Trung Lap';
+SELECT * FROM [ENCOUNTER.2] 
+EXEC dbo.usp_CreateSpecimen_B2 11, 5, 'Urine', 'UA', '2025-12-09', 'Collected';
+
+DECLARE @EncID INT;
+-- Create new encounter to test---
+EXEC dbo.usp_InsertNewEncounter_B2 
+    @patient_id = 5, 
+    @encounter_date = '2025-12-09 20:30:00', 
+    @encounter_type = 'LabTest', 
+    @notes = 'Kiem tra trung lap';
+SELECT * FROM [ENCOUNTER.2] 
+EXEC dbo.usp_CreateSpecimen_B2 14, 5, 'Urine', 'UA', '2025-12-09 20:30:00', 'InLab';
