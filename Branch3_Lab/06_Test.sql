@@ -21,6 +21,9 @@ FROM Branch_2.Branch_2.dbo.[TEST_CATALOG.1];
 SELECT *
 FROM Branch_2.Branch_2.dbo.[SPECIMEN.1.2];
 
+--Delete test catalog:
+exec dbo.usp_DeleteTestCatalog_Lab 'CBC01';
+
 --Update specimen status:
 exec dbo.usp_UpdateSpecimenStatus_Lab
     @specimen_id =2 ,

@@ -225,3 +225,66 @@ BEGIN
     END;
 END;
 GO
+
+-- Procedure to delete a test from TEST_CATALOG across all branches
+CREATE OR ALTER PROCEDURE dbo.usp_DeleteTestCatalog_Lab
+    @test_code VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        ---------------------------------------------------------
+        -- 1. Check test exists in Lab (Site 3)
+        ---------------------------------------------------------
+        IF NOT EXISTS (
+            SELECT 1
+            FROM dbo.[TEST_CATALOG.2]
+            WHERE test_code = @test_code
+        )
+        BEGIN
+            RAISERROR('Test does not exist in Site 3 TEST_CATALOG.', 16, 1);
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        ---------------------------------------------------------
+        -- 2. Delete from Site 1 catalog (if present)
+        ---------------------------------------------------------
+        DELETE FROM Branch_1.Branch_1.dbo.[TEST_CATALOG.1]
+        WHERE test_code = @test_code;
+
+        ---------------------------------------------------------
+        -- 3. Delete from Site 2 catalog (if present)
+        ---------------------------------------------------------
+        DELETE FROM Branch_2.Branch_2.dbo.[TEST_CATALOG.1]
+        WHERE test_code = @test_code;
+
+        ---------------------------------------------------------
+        -- 4. Delete from Site 3 (Lab) catalog
+        ---------------------------------------------------------
+        DELETE FROM dbo.[TEST_CATALOG.2]
+        WHERE test_code = @test_code;
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRAN;
+
+        DECLARE 
+            @errMsg  NVARCHAR(2048),
+            @errSev  INT,
+            @errState INT;
+
+        SELECT 
+            @errMsg  = ERROR_MESSAGE(),
+            @errSev  = ERROR_SEVERITY(),
+            @errState = ERROR_STATE();
+
+        RAISERROR(@errMsg, @errSev, @errState);
+    END CATCH;
+END;
+GO
