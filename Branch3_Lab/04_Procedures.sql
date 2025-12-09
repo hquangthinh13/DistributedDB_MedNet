@@ -288,3 +288,64 @@ BEGIN
     END CATCH;
 END;
 GO
+
+-- Procedure to add a new branch
+CREATE PROCEDURE dbo.usp_AddBranch
+    @branch_id INT,
+    @type      VARCHAR(6),     -- 'Lab' or 'Clinic'
+    @address   VARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        ---------------------------------------------------------
+        -- 1. Validate branch_id uniqueness
+        ---------------------------------------------------------
+        IF EXISTS (
+            SELECT 1 FROM dbo.BRANCH WHERE branch_id = @branch_id
+        )
+        BEGIN
+            RAISERROR('Branch ID already exists.', 16, 1);
+            RETURN;
+        END;
+
+        ---------------------------------------------------------
+        -- 2. Validate branch type
+        ---------------------------------------------------------
+        IF @type NOT IN ('Lab', 'Clinic')
+        BEGIN
+            RAISERROR('Invalid branch type. Allowed: Lab, Clinic.', 16, 1);
+            RETURN;
+        END;
+
+        ---------------------------------------------------------
+        -- 3. Insert new branch
+        ---------------------------------------------------------
+        INSERT INTO dbo.BRANCH (
+            branch_id,
+            type,
+            address
+        )
+        VALUES (
+            @branch_id,
+            @type,
+            @address
+        );
+    END TRY
+
+    BEGIN CATCH
+        ---------------------------------------------------------
+        -- Standardized error rethrow (same style as catalog proc)
+        ---------------------------------------------------------
+        DECLARE @ErrMsg NVARCHAR(4000),
+                @ErrSeverity INT;
+
+        SELECT 
+            @ErrMsg = ERROR_MESSAGE(),
+            @ErrSeverity = ERROR_SEVERITY();
+
+        RAISERROR(@ErrMsg, @ErrSeverity, 1);
+    END CATCH;
+END;
+GO
