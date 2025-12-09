@@ -19,3 +19,9 @@ CREATE SEQUENCE dbo.SpecimenIdSeq
     INCREMENT BY 1;
 GO
 
+-- Global test result id sequence
+CREATE SEQUENCE dbo.TestResultIdSeq
+    AS INT
+    START WITH 1
+    INCREMENT BY 1;
+GO
