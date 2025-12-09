@@ -27,3 +27,29 @@ EXEC dbo.usp_InsertNewEncounter_B2 @PatID, '2025-12-03 11:00:00', 'LabTest', 'Ki
 -- Insert Specimen
    EXEC dbo.usp_CreateSpecimen_B2 5, 6, 'Swab', 'COVID_PCR', '2025-12-04 15:45:00', 'Archived';
 GO
+
+----2. Test procedure Update Specimen Status---
+select * from [SPECIMEN.1.2]
+EXEC dbo.usp_UpdateSpecimenStatus_B2
+    @specimen_id = 2,
+    @new_status  = 'InLab';
+
+---3. Test procedure Get Results ----
+EXEC dbo.usp_GetEncounterTestResults_B2 5;
+
+---4. Test procedure Delete Specimen---
+--CREATE NEW DATA FOR TESTING
+DECLARE @PatID INT, @EncID INT, @SpecID INT;
+EXEC dbo.usp_InsertPatient_B2 'Nguyen', 'Van Test', '1999-01-01', 'M', '0999111222', 'test.msdtc@email.com', 'HCM';
+SELECT @PatID = patient_id FROM [PATIENT.2] WHERE email = 'test.msdtc@email.com';
+
+EXEC dbo.usp_InsertNewEncounter_B2 @PatID, '2025-12-10', 'LabTest', 'Test Delete Proc';
+SELECT TOP 1 @EncID = encounter_id FROM [ENCOUNTER.2] WHERE patient_id = @PatID ORDER BY encounter_id DESC;
+
+EXEC dbo.usp_CreateSpecimen_B2 @EncID, @PatID, 'Swab', 'COVID_PCR', '2025-12-10', 'Collected';
+SELECT TOP 1 @SpecID = specimen_id FROM [SPECIMEN.1.2] WHERE encounter_id = @EncID;
+
+SELECT * FROM [PATIENT.2] 
+SELECT * FROM [SPECIMEN.1.2] 
+-- DELETE USING PROCEDURE 
+EXEC dbo.usp_DeleteSpecimen_B2 @specimen_id = 17;
