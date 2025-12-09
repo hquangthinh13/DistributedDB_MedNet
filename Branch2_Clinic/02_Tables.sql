@@ -1,37 +1,50 @@
+CREATE TABLE [PATIENT.2] (
+    patient_id INT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50)  NOT NULL,
+    date_of_birth DATE,
+    gender CHAR(1) NOT NULL CHECK (gender IN ('M', 'F', 'O')),
+    phone_number VARCHAR(10),
+    email VARCHAR(50) UNIQUE,
+    address VARCHAR(100)
+);
+--- Replicated: BRANCH ---
 CREATE TABLE BRANCH (
     branch_id INT PRIMARY KEY,
     type VARCHAR(6) CHECK (type IN ('Lab', 'Clinic')),
     address VARCHAR(100)
 );
-
-CREATE TABLE [TEST_CATALOG.2] (
+--- VF: CATALOG ---
+CREATE TABLE [TEST_CATALOG.1] (
     test_code VARCHAR(20) PRIMARY KEY,
-    method VARCHAR(50),
-    analyte VARCHAR(50),
-    unit VARCHAR(20),
-    ref_range_low INT,
-    ref_range_high INT,
-    ref_range_text VARCHAR(100),
-    CONSTRAINT CHK_REF_RANGE CHECK (ref_range_low < ref_range_high)
+    test_name VARCHAR(50),
+    category VARCHAR(20),
+    price INT CHECK (price >= 0),
+    is_active BIT
 );
-
-CREATE TABLE [SPECIMEN.2] (
-    specimen_id INT PRIMARY KEY,
-    test_code VARCHAR(20),
-    status VARCHAR(10) CHECK (status IN ('Collected', 'InLab', 'Archived', 'Disposed')),
-    CONSTRAINT FK_SPECIMEN_TESTCATALOG FOREIGN KEY (test_code)
-        REFERENCES [TEST_CATALOG.2](test_code),
-);
-
-
-CREATE TABLE TEST_RESULT (
-    result_id INT PRIMARY KEY,
+--- ENCOUNTER ---
+CREATE TABLE [ENCOUNTER.2] (
+    encounter_id INT PRIMARY KEY,
+    patient_id INT,
     branch_id INT,
-    specimen_id INT,
-    result_datetime DATETIME,
-    result_numeric FLOAT,
-    CONSTRAINT FK_TESTRESULT_BRANCH FOREIGN KEY (branch_id)
-        REFERENCES BRANCH(branch_id),
-    CONSTRAINT FK_TESTRESULT_SPECIMEN FOREIGN KEY (specimen_id)
-        REFERENCES [SPECIMEN.2](specimen_id)
+    encounter_date DATETIME,
+   encounter_type VARCHAR(20) CHECK (encounter_type IN ('Consultation', 'FollowUp', 'LabTest')),
+   notes VARCHAR(300),
+    CONSTRAINT FK_ENCOUNTER_PATIENT FOREIGN KEY (patient_id)
+        REFERENCES [PATIENT.2](patient_id),
+    CONSTRAINT FK_ENCOUNTER_BRANCH FOREIGN KEY (branch_id)
+        REFERENCES BRANCH(branch_id)
+);
+--- SPECIMEN ---
+CREATE TABLE [SPECIMEN.1.2] (
+    specimen_id INT PRIMARY KEY, 
+    encounter_id INT,
+    patient_id INT,
+   specimen_type VARCHAR(30) CHECK (specimen_type IN ('Blood', 'Urine', 'Tissue', 'Stool', 'Swab', 'Other')),
+    test_code VARCHAR(20),
+    collection_date DATETIME,
+    status VARCHAR(10) CHECK (status IN ('Collected', 'InLab', 'Archived', 'Disposed')),
+    CONSTRAINT [FK_SPECIMEN.1.2_ENCOUNTER] FOREIGN KEY (encounter_id) REFERENCES [ENCOUNTER.2](encounter_id),
+    CONSTRAINT [FK_SPECIMEN.1.2_PATIENT] FOREIGN KEY (patient_id) REFERENCES [PATIENT.2](patient_id),
+    CONSTRAINT [FK_SPECIMEN.1.2_TESTCATALOG] FOREIGN KEY (test_code) REFERENCES [TEST_CATALOG.1](test_code)
 );
