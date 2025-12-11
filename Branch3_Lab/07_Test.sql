@@ -21,9 +21,6 @@ FROM Branch_2.Branch_2.dbo.[TEST_CATALOG.1];
 SELECT *
 FROM Branch_2.Branch_2.dbo.[SPECIMEN.1.2];
 
---Delete test catalog:
-exec dbo.usp_DeleteTestCatalog_Lab 'CBC01';
-
 --Update specimen status:
 exec dbo.usp_UpdateSpecimenStatus_Lab
     @specimen_id =2 ,
@@ -36,7 +33,26 @@ EXEC dbo.usp_InsertTestResult_Lab
 
 select * from TEST_RESULT;
 
+--Delete test catalog:
+exec dbo.usp_DeleteTestCatalog_Lab 'CBC01';
+
+
+
+
 --Attempt to delete specimen with test result (should fail):
 DELETE FROM [SPECIMEN.2]
 WHERE specimen_id = 1;
+
+
+--Get new patient ID:
+DECLARE @newPatientId INT;
+
+EXEC dbo.usp_GetNewPatientId @patient_id = @newPatientId OUTPUT;
+
+SELECT @newPatientId AS NewPatientId;
+
+--Views:
+select * from dbo.v_AllSpecimen;
+select * from dbo.v_TestCatalog;
+select * from dbo.v_AllPatients;
 
